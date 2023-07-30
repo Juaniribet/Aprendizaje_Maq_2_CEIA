@@ -38,6 +38,7 @@ FECHA: 21-Jul-2023
 """
 
 # Imports
+import os
 import pandas as pd
 
 class FeatureEngineeringPipeline():
@@ -45,22 +46,32 @@ class FeatureEngineeringPipeline():
     Data cleaninig and Features Engineering pipeline class
     '''
 
-    def __init__(self, input_path, output_path):
+    def __init__(self, output_path, input_path):
         self.input_path = input_path
         self.output_path = output_path
 
     def read_data(self) -> pd.DataFrame:
         """
         Read raw data from csv file. 
+        The files names must be 'Train_BigMart.csv' and 'Test_BigMart.csv' for train and test data
         
         -return pandas_df: The desired DataLake table as a DataFrame
         -rtype: pd.DataFrame
         """
-        data = pd.read_csv(self.input_path)
+
+        for filename in os.listdir(self.input_path):
+            if filename == 'Train_BigMart.csv':
+                data_train = pd.read_csv(self.input_path + '/' + filename)
+                data_train['Set'] = 'train'
+            elif filename == 'Test_BigMart.csv':
+                data_test = pd.read_csv(self.input_path + '/' + filename)
+                data_test['Set'] = 'test'
+
+        data = pd.concat([data_train, data_test], ignore_index=True, sort=False)
 
         variables = ['Item_Identifier', 'Item_Weight', 'Item_Fat_Content', 'Item_Visibility',
-                    'Item_Type', 'Item_MRP', 'Outlet_Identifier', 'Outlet_Establishment_Year', 
-                    'Outlet_Size', 'Outlet_Location_Type', 'Outlet_Type']
+            'Item_Type', 'Item_MRP', 'Outlet_Identifier', 'Outlet_Establishment_Year', 
+            'Outlet_Size', 'Outlet_Location_Type', 'Outlet_Type','Item_Outlet_Sales','Set']
 
         missing_col = [var for var in variables if var not in data.columns]
 
@@ -68,13 +79,10 @@ class FeatureEngineeringPipeline():
         if missing_col:
             print(f'Error: Colums missing in the dataset:  {missing_col}')
         else:
-            if 'Item_Outlet_Sales' in data.columns:
-                variables.append('Item_Outlet_Sales')
-
             pandas_df = data[variables]
 
             return pandas_df
-        
+
         return None
 
     def data_transformation(self, data: pd.DataFrame) -> pd.DataFrame:
@@ -84,14 +92,14 @@ class FeatureEngineeringPipeline():
         # Determine the age of the Establisment by the year 2019
         data['Outlet_Establishment_Year'] = 2020 - data['Outlet_Establishment_Year']
 
-        # Fill null values in productos 'Item_Weight'. Imputation of similar cases
-        try:
-            productos = list(data[data['Item_Weight'].isnull()]['Item_Identifier'].unique())
-            for producto in productos:
-                moda = (data[data['Item_Identifier'] == producto][['Item_Weight']]).mode().iloc[0,0]
-                data.loc[data['Item_Identifier'] == producto, 'Item_Weight'] = moda
-        finally:
-            pass
+        # Fill null values in productos 'Item_Weight'. Imputation of similar cases    
+        items = list(data[data['Item_Weight'].isnull()]['Item_Identifier'].unique())
+        for item in items:
+            try:
+                moda = (data[data['Item_Identifier'] == item][['Item_Weight']]).mode().iloc[0,0]
+                data.loc[data['Item_Identifier'] == item, 'Item_Weight'] = moda
+            finally:
+                continue
 
         # Fill null values in Outlet_Size
         outlets = list(data[data['Outlet_Size'].isnull()]['Outlet_Identifier'].unique())
@@ -125,8 +133,18 @@ class FeatureEngineeringPipeline():
         Files saved as csv format at the outputh_path location.
         -transformed_dataframe: pd.DataFrame
         '''
+        # División del dataset de train y test
+        df_train = transformed_dataframe.loc[transformed_dataframe['Set'] == 'train']
+        df_test = transformed_dataframe.loc[transformed_dataframe['Set'] == 'test']
 
-        transformed_dataframe.to_csv(self.output_path)
+        # Eliminando columnas sin datos
+        df_train.drop(columns=['Set'], inplace=True)
+        df_test.drop(columns=['Item_Outlet_Sales','Set'], inplace=True)
+
+        # Guardando los datasets
+
+        df_train.to_csv(self.output_path + "/outdata_train.csv")
+        df_test.to_csv(self.output_path + "/outdata_Test.csv")
 
     def run(self):
         ''' 
@@ -139,8 +157,8 @@ class FeatureEngineeringPipeline():
 
 
 if __name__ == "__main__":
-    FeatureEngineeringPipeline(input_path = "C:/Users/juani/Documents/Especializacion IA/Aprendizaje de Maquina II/TP - AMq2/data/Train_BigMart.csv",
-                               output_path = "C:/Users/juani/Documents/Especializacion IA/Aprendizaje de Maquina II/TP - AMq2/data/outdata_Train.csv").run()
+    FeatureEngineeringPipeline(input_path = "C:/Users/juani/Documents/Especializacion IA/Aprendizaje de Maquina II/Aprendizaje_Maq_2_CEIA/data",
+                               output_path = "C:/Users/juani/Documents/Especializacion IA/Aprendizaje de Maquina II/Aprendizaje_Maq_2_CEIA/data").run()
 
-    FeatureEngineeringPipeline(input_path = "C:/Users/juani/Documents/Especializacion IA/Aprendizaje de Maquina II/TP - AMq2/data/Test_BigMart.csv",
-                            output_path = "C:/Users/juani/Documents/Especializacion IA/Aprendizaje de Maquina II/TP - AMq2/data/outdata_Test.csv").run()
+    # FeatureEngineeringPipeline(input_path = "C:/Users/juani/Documents/Especializacion IA/Aprendizaje de Maquina II/Aprendizaje_Maq_2_CEIA/data/Test_BigMart.csv",
+    #                         output_path = "C:/Users/juani/Documents/Especializacion IA/Aprendizaje de Maquina II/Aprendizaje_Maq_2_CEIA/data/outdata_Test.csv").run()
