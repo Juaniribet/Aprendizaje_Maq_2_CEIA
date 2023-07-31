@@ -160,4 +160,4 @@ class FeatureEngineeringPipeline():
 
 if __name__ == "__main__":
     FeatureEngineeringPipeline(input_path = '..\\Aprendizaje_Maq_2_CEIA\\data',
-                            output_path = '..\\Aprendizaje_Maq_2_CEIA\\data').run()
+                            output_path = '..\\Aprendizaje_Maq_2_CEIA\\results').run()

@@ -105,5 +105,5 @@ class ModelTrainingPipeline():
         self.model_dump(model_trained)
 
 if __name__ == "__main__":
-    ModelTrainingPipeline(input_path = '..\\Aprendizaje_Maq_2_CEIA\\data\\outdata_train.csv',
-                          model_path = '..\\Aprendizaje_Maq_2_CEIA\\data\\model_trained.pkl').run()
+    ModelTrainingPipeline(input_path = '..\\Aprendizaje_Maq_2_CEIA\\results\\outdata_train.csv',
+                          model_path = '..\\Aprendizaje_Maq_2_CEIA\\results\\model_trained.pkl').run()
