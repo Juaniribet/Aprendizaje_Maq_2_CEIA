@@ -64,7 +64,7 @@ class MakePredictionPipeline():
         # compile the prediction with the identifiers.
         new_data = pd.DataFrame({'Item_Identifier': self.item,
                                  'Outlet_Identifier': self.outlet,
-                                 'predicted_price' : pred})
+                                 'Pred_Item_Outlet_Sales' : pred})
 
         return new_data
 
