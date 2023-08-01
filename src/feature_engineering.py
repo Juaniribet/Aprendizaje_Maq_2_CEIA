@@ -47,17 +47,26 @@ DATE: 31-Jul-2023
 import os
 import pandas as pd
 
-def replace_data(dataframe: pd.DataFrame, columns:str, dic_data_repalce: dict):
-    dataframe[columns] = dataframe[columns].replace(dic_data_repalce)
+def replace_data(dataframe: pd.DataFrame, column:str, dic_data_repalce: dict):
+    '''
+    Funtion to code ordinal variables of the 'dataframe'.
+    column : column name to modify to code ordinal values
+    dic_data_repalce: dtype: dict 
+    '''
+    dataframe[column] = dataframe[column].replace(dic_data_repalce)
 
 class FeatureEngineeringPipeline():
     ''' 
     Data cleaninig and Features Engineering class
+    input_path : Directory to load the data to be transform.
+    output_path : Directory to save the data transformed.
+    predict_data : If the data is for inference 'predict_data' should be 'True'. Default: False
     '''
 
-    def __init__(self, output_path, input_path):
+    def __init__(self, output_path, input_path, predict_data = False):
         self.input_path = input_path
         self.output_path = output_path
+        self.predict_data = predict_data
 
     def read_data(self) -> pd.DataFrame:
         '''
@@ -67,7 +76,14 @@ class FeatureEngineeringPipeline():
         -return pandas_df: The desired DataLake table as a DataFrame.
         -rtype: pd.DataFrame.
         '''
+        # For predict data:
+        if self.predict_data:
+            example = pd.read_json(self.input_path, typ='series')
+            example = pd.DataFrame(data=[example.values], columns= example.index)
 
+            return example
+
+        # For train data:
         for filename in os.listdir(self.input_path):
             if filename == 'Train_BigMart.csv':
                 data_train = pd.read_csv(self.input_path + '/' + filename)
@@ -112,21 +128,45 @@ class FeatureEngineeringPipeline():
         for outlet in outlets:
             data.loc[data['Outlet_Identifier'] == outlet, 'Outlet_Size'] =  'Small'
 
-        # Coding máximum retailed price by labels.
-        data['Item_MRP'] = pd.qcut(data['Item_MRP'], 4, labels = [1, 2, 3, 4])
-
-        # Drop colums: 'Item_Type', 'Item_Fat_Content', 'Item_Identifier', 'Outlet_Identifier'.
-        data = data.drop(columns=['Item_Type',
-                                  'Item_Fat_Content',
-                                  'Item_Identifier', 
-                                  'Outlet_Identifier'])
-
         # Modify object dtype varibles. Coding of ordinal variables.
         replace_data(data, 'Outlet_Size', ({'High': 2,'Medium': 1,'Small': 0}))
-
         replace_data(data, 'Outlet_Location_Type', ({'Tier 1': 2,'Tier 2': 1,'Tier 3': 0}))
 
-        df_transformed = pd.get_dummies(data, columns=['Outlet_Type'],dtype=int)
+        # For predict data:
+        if self.predict_data:
+            # Coding máximum retailed price by labels.
+            ranges = [(31.288999999999998, 94.012), (94.012, 142.247),
+                      (142.247, 185.856), (185.856, 266.888)]
+            data['Item_MRP'] = [ranges.index(r)+1 for r in ranges
+                                if min(r) <= data['Item_MRP'][0] <= max(r)][0]
+
+            #Drop colums: 'Item_Type', 'Item_Fat_Content'.
+            data = data.drop(columns=['Item_Type', 'Item_Fat_Content',])
+            outlet_type = ['Grocery Store','Supermarket Type1', 
+                           'Supermarket Type2','Supermarket Type3']
+
+            # similar get_dummies for predict data
+            for outlet in outlet_type:
+                data['Outlet_Type_'+outlet] = 0
+                if outlet == data['Outlet_Type'][0]:
+                    data['Outlet_Type_'+outlet] = 1
+            data = data.drop(columns=['Outlet_Type'])
+
+        # For train data:
+        else:
+            # Coding máximum retailed price by labels.
+
+            data['Item_MRP'] = pd.qcut(data['Item_MRP'], 4, labels = [1, 2, 3, 4])
+
+            # Drop colums: 'Item_Type', 'Item_Fat_Content', 'Item_Identifier', 'Outlet_Identifier'.
+            data = data.drop(columns=['Item_Type',
+                                    'Item_Fat_Content',
+                                    'Item_Identifier', 
+                                    'Outlet_Identifier'])
+
+            data = pd.get_dummies(data, columns=['Outlet_Type'],dtype=int)
+
+        df_transformed = data.copy()
 
         return df_transformed
 
@@ -135,19 +175,26 @@ class FeatureEngineeringPipeline():
         Files saved as csv format at the outputh_path location.
         -transformed_dataframe: pd.DataFrame.
         '''
-        # Splitting the dataset in train and test.
-        df_train = transformed_dataframe.loc[transformed_dataframe['Set'] == 'train']
-        df_test = transformed_dataframe.loc[transformed_dataframe['Set'] == 'test']
+        # For predict data:
+        if self.predict_data:
+            transformed_dataframe.to_csv(self.output_path + "/example_df.csv")
+        # For train data:
+        else:
+            # Splitting the dataset in train and test.
+            df_train = transformed_dataframe.loc[transformed_dataframe['Set'] == 'train']
+            df_test = transformed_dataframe.loc[transformed_dataframe['Set'] == 'test']
 
-        # Drop columns with no data.
-        df_train_final = df_train.copy()
-        df_train_final.drop(columns=['Set'], inplace=True)
-        df_test_final = df_test.copy()
-        df_test_final.drop(columns=['Item_Outlet_Sales','Set'], inplace=True)
+            # Drop columns with no data.
+            df_train_final = df_train.copy()
+            df_train_final.drop(columns=['Set'], inplace=True)
+            df_test_final = df_test.copy()
+            df_test_final.drop(columns=['Item_Outlet_Sales','Set'], inplace=True)
 
-        # Save the datasets.
-        df_train_final.to_csv(self.output_path + "/outdata_train.csv")
-        df_test_final.to_csv(self.output_path + "/outdata_Test.csv")
+            # Save the datasets.
+            df_train_final.to_csv(self.output_path + "/outdata_train.csv")
+            df_test_final.to_csv(self.output_path + "/outdata_Test.csv")
+
+            print('¡¡DATA SUCCESSFULLY TRANSFORMED!!')
 
     def run(self):
         ''' 
@@ -159,5 +206,9 @@ class FeatureEngineeringPipeline():
 
 
 if __name__ == "__main__":
-    FeatureEngineeringPipeline(input_path = '..\\Aprendizaje_Maq_2_CEIA\\data',
-                            output_path = '..\\Aprendizaje_Maq_2_CEIA\\results').run()
+    # Local base directorys where the scripts are saved
+    base_path, _ = os.path.split(os.path.abspath(__file__))
+    base_path = os.path.abspath(os.path.join(base_path, os.pardir))
+
+    FeatureEngineeringPipeline(input_path = base_path + '\\data',
+                            output_path = base_path + '\\results').run()

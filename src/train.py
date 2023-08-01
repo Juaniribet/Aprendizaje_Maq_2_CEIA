@@ -17,6 +17,7 @@ DATE: 31-Jul-2023.
 '''
 
 # Imports
+import os
 import pickle
 import pandas as pd
 from sklearn.model_selection import train_test_split
@@ -99,11 +100,14 @@ class ModelTrainingPipeline():
         '''
         Run pipeline Training Pipeline.
         '''
-
         dataframe = self.read_data()
         model_trained = self.model_training(dataframe)
         self.model_dump(model_trained)
 
 if __name__ == "__main__":
-    ModelTrainingPipeline(input_path = '..\\Aprendizaje_Maq_2_CEIA\\results\\outdata_train.csv',
-                          model_path = '..\\Aprendizaje_Maq_2_CEIA\\results\\model_trained.pkl').run()
+    # Local base directorys where the scripts are saved
+    base_path, _ = os.path.split(os.path.abspath(__file__))
+    base_path = os.path.abspath(os.path.join(base_path, os.pardir))
+
+    ModelTrainingPipeline(input_path = base_path + '\\results\\outdata_train.csv',
+                          model_path = base_path + '\\results\\model_trained.pkl').run()
