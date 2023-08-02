@@ -17,6 +17,7 @@ import os
 import pickle
 import pandas as pd
 
+
 class MakePredictionPipeline():
     '''
     Make prediction with the trained model class.
@@ -38,7 +39,7 @@ class MakePredictionPipeline():
         # Save 'Item_Identifier' and 'Outlet_Identifier' for the return data.
         self.item = data['Item_Identifier']
         self.outlet = data['Outlet_Identifier']
-        # Drop 'Item_Identifier' and 'Outlet_Identifier' to get the data 
+        # Drop 'Item_Identifier' and 'Outlet_Identifier' to get the data
         # ready to make the prediction
         data = data.drop(columns=['Item_Identifier', 'Outlet_Identifier'])
 
@@ -50,7 +51,6 @@ class MakePredictionPipeline():
         """
         with open(self.model_path, 'rb') as file:
             self.model = pickle.load(file)
-
 
     def make_predictions(self, data: pd.DataFrame) -> pd.DataFrame:
         """
@@ -64,17 +64,15 @@ class MakePredictionPipeline():
         # compile the prediction with the identifiers.
         new_data = pd.DataFrame({'Item_Identifier': self.item,
                                  'Outlet_Identifier': self.outlet,
-                                 'Pred_Item_Outlet_Sales' : pred})
+                                 'Pred_Item_Outlet_Sales': pred})
 
         return new_data
-
 
     def write_predictions(self, predicted_data: pd.DataFrame) -> None:
         """
         Save the the predction and the identifiers in an scv file.
         """
         predicted_data.to_csv(self.output_path)
-
 
     def run(self):
         '''
@@ -91,7 +89,7 @@ if __name__ == "__main__":
     base_path, _ = os.path.split(os.path.abspath(__file__))
     base_path = os.path.abspath(os.path.join(base_path, os.pardir))
 
-    pipeline = MakePredictionPipeline(input_path = base_path + '\\results\\example_df.csv',
-                                      output_path = base_path + '\\results\\predicted_data.csv',
-                                      model_path = base_path + '\\results\\model_trained.pkl')
+    pipeline = MakePredictionPipeline(input_path=base_path + '\\results\\example_df.csv',
+                                      output_path=base_path + '\\results\\predicted_data.csv',
+                                      model_path=base_path + '\\results\\model_trained.pkl')
     pipeline.run()

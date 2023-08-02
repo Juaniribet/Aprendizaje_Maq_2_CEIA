@@ -45,7 +45,6 @@ class ModelTrainingPipeline():
 
         return data
 
-
     def model_training(self, dataframe: pd.DataFrame) -> pd.DataFrame:
         '''
         Split data (70% train, 30% validation) and train the Linear Regression model.
@@ -62,11 +61,11 @@ class ModelTrainingPipeline():
         y_data = dataframe['Item_Outlet_Sales']
         x_train, x_val, y_train, y_val = train_test_split(features_data,
                                                           y_data,
-                                                          test_size = 0.3,
+                                                          test_size=0.3,
                                                           random_state=28)
 
         # Model Training.
-        model.fit(x_train,y_train)
+        model.fit(x_train, y_train)
 
         # Root mean square errors and Coefficient of Determination.
         mse_train = metrics.mean_squared_error(y_train, model.predict(x_train))
@@ -104,10 +103,11 @@ class ModelTrainingPipeline():
         model_trained = self.model_training(dataframe)
         self.model_dump(model_trained)
 
+
 if __name__ == "__main__":
     # Local base directorys where the scripts are saved
     base_path, _ = os.path.split(os.path.abspath(__file__))
     base_path = os.path.abspath(os.path.join(base_path, os.pardir))
 
-    ModelTrainingPipeline(input_path = base_path + '\\results\\outdata_train.csv',
-                          model_path = base_path + '\\results\\model_trained.pkl').run()
+    ModelTrainingPipeline(input_path=base_path + '\\results\\outdata_train.csv',
+                          model_path=base_path + '\\results\\model_trained.pkl').run()

@@ -47,13 +47,15 @@ DATE: 31-Jul-2023
 import os
 import pandas as pd
 
-def replace_data(dataframe: pd.DataFrame, column:str, dic_data_repalce: dict):
+
+def replace_data(dataframe: pd.DataFrame, column: str, dic_data_repalce: dict):
     '''
     Funtion to code ordinal variables of the 'dataframe'.
     column : column name to modify to code ordinal values
     dic_data_repalce: dtype: dict 
     '''
     dataframe[column] = dataframe[column].replace(dic_data_repalce)
+
 
 class FeatureEngineeringPipeline():
     ''' 
@@ -63,7 +65,7 @@ class FeatureEngineeringPipeline():
     predict_data : If the data is for inference 'predict_data' should be 'True'. Default: False
     '''
 
-    def __init__(self, output_path, input_path, predict_data = False):
+    def __init__(self, output_path, input_path, predict_data=False):
         self.input_path = input_path
         self.output_path = output_path
         self.predict_data = predict_data
@@ -72,14 +74,15 @@ class FeatureEngineeringPipeline():
         '''
         Read raw data from csv file. 
         The files names must be 'Train_BigMart.csv' and 'Test_BigMart.csv' for train and test data.
-        
+
         -return pandas_df: The desired DataLake table as a DataFrame.
         -rtype: pd.DataFrame.
         '''
         # For predict data:
         if self.predict_data:
             example = pd.read_json(self.input_path, typ='series')
-            example = pd.DataFrame(data=[example.values], columns= example.index)
+            example = pd.DataFrame(
+                data=[example.values], columns=example.index)
 
             return example
 
@@ -92,15 +95,16 @@ class FeatureEngineeringPipeline():
                 data_test = pd.read_csv(self.input_path + '/' + filename)
                 data_test['Set'] = 'test'
 
-        data = pd.concat([data_train, data_test], ignore_index=True, sort=False)
+        data = pd.concat([data_train, data_test],
+                         ignore_index=True, sort=False)
 
         variables = ['Item_Identifier', 'Item_Weight', 'Item_Fat_Content', 'Item_Visibility',
-            'Item_Type', 'Item_MRP', 'Outlet_Identifier', 'Outlet_Establishment_Year', 
-            'Outlet_Size', 'Outlet_Location_Type', 'Outlet_Type','Item_Outlet_Sales','Set']
+                     'Item_Type', 'Item_MRP', 'Outlet_Identifier', 'Outlet_Establishment_Year',
+                     'Outlet_Size', 'Outlet_Location_Type', 'Outlet_Type', 'Item_Outlet_Sales', 'Set']
 
         missing_col = [var for var in variables if var not in data.columns]
 
-        #Check if there is any missing expected column for the data transformation function.
+        # Check if there is any missing expected column for the data transformation function.
         if missing_col:
             print(f'Error: Colums missing in the dataset:  {missing_col}')
         else:
@@ -115,22 +119,29 @@ class FeatureEngineeringPipeline():
         Data transformation.
         '''
         # Determine the age of the Establisment by the year 2019.
-        data['Outlet_Establishment_Year'] = 2020 - data['Outlet_Establishment_Year']
+        data['Outlet_Establishment_Year'] = 2020 - \
+            data['Outlet_Establishment_Year']
 
         # Fill null values in productos 'Item_Weight'. Imputation of similar cases.
-        items = list(data[data['Item_Weight'].isnull()]['Item_Identifier'].unique())
+        items = list(data[data['Item_Weight'].isnull()]
+                     ['Item_Identifier'].unique())
         for item in items:
-            moda = (data[data['Item_Identifier'] == item][['Item_Weight']]).mode().iloc[0,0]
+            moda = (data[data['Item_Identifier'] == item]
+                    [['Item_Weight']]).mode().iloc[0, 0]
             data.loc[data['Item_Identifier'] == item, 'Item_Weight'] = moda
 
         # Fill null values in Outlet_Size.
-        outlets = list(data[data['Outlet_Size'].isnull()]['Outlet_Identifier'].unique())
+        outlets = list(data[data['Outlet_Size'].isnull()]
+                       ['Outlet_Identifier'].unique())
         for outlet in outlets:
-            data.loc[data['Outlet_Identifier'] == outlet, 'Outlet_Size'] =  'Small'
+            data.loc[data['Outlet_Identifier'] ==
+                     outlet, 'Outlet_Size'] = 'Small'
 
         # Modify object dtype varibles. Coding of ordinal variables.
-        replace_data(data, 'Outlet_Size', ({'High': 2,'Medium': 1,'Small': 0}))
-        replace_data(data, 'Outlet_Location_Type', ({'Tier 1': 2,'Tier 2': 1,'Tier 3': 0}))
+        replace_data(data, 'Outlet_Size',
+                     ({'High': 2, 'Medium': 1, 'Small': 0}))
+        replace_data(data, 'Outlet_Location_Type',
+                     ({'Tier 1': 2, 'Tier 2': 1, 'Tier 3': 0}))
 
         # For predict data:
         if self.predict_data:
@@ -140,10 +151,10 @@ class FeatureEngineeringPipeline():
             data['Item_MRP'] = [ranges.index(r)+1 for r in ranges
                                 if min(r) <= data['Item_MRP'][0] <= max(r)][0]
 
-            #Drop colums: 'Item_Type', 'Item_Fat_Content'.
+            # Drop colums: 'Item_Type', 'Item_Fat_Content'.
             data = data.drop(columns=['Item_Type', 'Item_Fat_Content',])
-            outlet_type = ['Grocery Store','Supermarket Type1', 
-                           'Supermarket Type2','Supermarket Type3']
+            outlet_type = ['Grocery Store', 'Supermarket Type1',
+                           'Supermarket Type2', 'Supermarket Type3']
 
             # similar get_dummies for predict data
             for outlet in outlet_type:
@@ -156,15 +167,16 @@ class FeatureEngineeringPipeline():
         else:
             # Coding máximum retailed price by labels.
 
-            data['Item_MRP'] = pd.qcut(data['Item_MRP'], 4, labels = [1, 2, 3, 4])
+            data['Item_MRP'] = pd.qcut(
+                data['Item_MRP'], 4, labels=[1, 2, 3, 4])
 
             # Drop colums: 'Item_Type', 'Item_Fat_Content', 'Item_Identifier', 'Outlet_Identifier'.
             data = data.drop(columns=['Item_Type',
-                                    'Item_Fat_Content',
-                                    'Item_Identifier', 
-                                    'Outlet_Identifier'])
+                                      'Item_Fat_Content',
+                                      'Item_Identifier',
+                                      'Outlet_Identifier'])
 
-            data = pd.get_dummies(data, columns=['Outlet_Type'],dtype=int)
+            data = pd.get_dummies(data, columns=['Outlet_Type'], dtype=int)
 
         df_transformed = data.copy()
 
@@ -188,7 +200,8 @@ class FeatureEngineeringPipeline():
             df_train_final = df_train.copy()
             df_train_final.drop(columns=['Set'], inplace=True)
             df_test_final = df_test.copy()
-            df_test_final.drop(columns=['Item_Outlet_Sales','Set'], inplace=True)
+            df_test_final.drop(
+                columns=['Item_Outlet_Sales', 'Set'], inplace=True)
 
             # Save the datasets.
             df_train_final.to_csv(self.output_path + "/outdata_train.csv")
@@ -210,5 +223,5 @@ if __name__ == "__main__":
     base_path, _ = os.path.split(os.path.abspath(__file__))
     base_path = os.path.abspath(os.path.join(base_path, os.pardir))
 
-    FeatureEngineeringPipeline(input_path = base_path + '\\data',
-                            output_path = base_path + '\\results').run()
+    FeatureEngineeringPipeline(input_path=base_path + '\\data',
+                               output_path=base_path + '\\results').run()

@@ -14,7 +14,7 @@ import feature_engineering as fe
 base_path, _ = os.path.split(os.path.abspath(__file__))
 base_path = os.path.abspath(os.path.join(base_path, os.pardir))
 
-fe.FeatureEngineeringPipeline(input_path = base_path + '\\data',
-                            output_path = base_path + '\\results').run()
+fe.FeatureEngineeringPipeline(input_path=base_path + '\\data',
+                              output_path=base_path + '\\results').run()
 
 subprocess.run(['Python', base_path + '\\src\\train.py'], check=True)

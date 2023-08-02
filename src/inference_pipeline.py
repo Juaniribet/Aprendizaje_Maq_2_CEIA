@@ -16,8 +16,8 @@ base_path, _ = os.path.split(os.path.abspath(__file__))
 base_path = os.path.abspath(os.path.join(base_path, os.pardir))
 
 # As it is for prediction: 'predict_data = True'
-fe.FeatureEngineeringPipeline(input_path = base_path + '\\Notebook\\example.json',
-                            output_path = base_path + '\\results',
-                            predict_data = True).run()
+fe.FeatureEngineeringPipeline(input_path=base_path + '\\Notebook\\example.json',
+                              output_path=base_path + '\\results',
+                              predict_data=True).run()
 
 subprocess.run(['Python', base_path + '\\src\\predict.py'], check=True)
