@@ -3,7 +3,9 @@
 ### TRABAJO INTEGRADOR FINAL 
 
 AUTHOR: Juan Ignacio Ribet
+
 DATE: 01-Ago-2023
+
 -------------------------------------------------------------
 
 -Run "train_pipeline.py" in the folder "src" to train the model.
