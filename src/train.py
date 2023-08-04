@@ -19,11 +19,19 @@ DATE: 31-Jul-2023.
 # Imports
 import os
 import pickle
+import logging
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn import metrics
 from sklearn.linear_model import LinearRegression
 
+path, _ = os.path.split(os.path.abspath(__file__))
+logging.basicConfig(
+    filename= os.path.abspath(os.path.join(path, os.pardir)) + '\\results\\logging_info.log',
+    level=logging.INFO,
+    filemode='a',
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S')
 
 class ModelTrainingPipeline():
     '''
@@ -70,21 +78,26 @@ class ModelTrainingPipeline():
         # Root mean square errors and Coefficient of Determination.
         mse_train = metrics.mean_squared_error(y_train, model.predict(x_train))
         r2_train = model.score(x_train, y_train)
-        print('Model Metrics:')
-        print(f'TRAIN: RMSE: {(mse_train**0.5):.2f} - R2: {r2_train:.4f}')
+        train_metrics = (f'TRAIN: RMSE: {(mse_train**0.5):.2f} - R2: {r2_train:.4f}')
 
         mse_val = metrics.mean_squared_error(y_val, model.predict(x_val))
         r2_val = model.score(x_val, y_val)
-        print(f'VALIDATION: RMSE: {(mse_val**0.5):.2f} - R2: {r2_val:.4f}')
+        val_metrics = (f'VALIDATION: RMSE: {(mse_val**0.5):.2f} - R2: {r2_val:.4f}')
 
-        print('\nModel Coefficients:')
         # Model constant.
-        print(f'Intersection: {(model.intercept_):.2f}')
+        intersection = (f'Intersection: {(model.intercept_):.2f}')
 
         # Model coefficients.
         coef = pd.DataFrame(x_train.columns, columns=['features'])
         coef['Estimates Coefficient'] = model.coef_
-        print(coef, '\n')
+
+        logging.info('TRAIN SCRIPT RUN SUCCESSFULLY!!')
+        logging.info('Model Metrics:')
+        logging.info(train_metrics)
+        logging.info(val_metrics)
+        logging.info('Model Coefficients:')
+        logging.info(intersection)
+        logging.info(coef)
 
         return model
 

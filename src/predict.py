@@ -14,9 +14,17 @@ DATE: 01-Ago-2023
 
 # Imports
 import os
+import logging
 import pickle
 import pandas as pd
 
+path, _ = os.path.split(os.path.abspath(__file__))
+logging.basicConfig(
+    filename= os.path.abspath(os.path.join(path, os.pardir)) + '\\results\\logging_info.log',
+    level=logging.INFO,
+    filemode='a',
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S')
 
 class MakePredictionPipeline():
     '''
@@ -58,8 +66,10 @@ class MakePredictionPipeline():
         """
         # Make the prediction.
         pred = self.model.predict(data)
-        print(f'The predicted sales of the item {self.item[0]}',
+        messenge = (f'The predicted sales of the item {self.item[0]}',
               f'in the outlet {self.outlet[0]} are: {int(pred[0])}')
+        
+        logging.info(messenge)
 
         # compile the prediction with the identifiers.
         new_data = pd.DataFrame({'Item_Identifier': self.item,

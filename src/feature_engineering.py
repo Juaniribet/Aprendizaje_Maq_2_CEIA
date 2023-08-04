@@ -45,7 +45,17 @@ DATE: 31-Jul-2023
 
 # Imports
 import os
+import logging
 import pandas as pd
+
+path, _ = os.path.split(os.path.abspath(__file__))
+logging.basicConfig(
+    filename=os.path.abspath(os.path.join(
+        path, os.pardir)) + '\\results\\logging_info.log',
+    level=logging.INFO,
+    filemode='a',
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S')
 
 
 def replace_data(dataframe: pd.DataFrame, column: str, dic_data_repalce: dict):
@@ -72,47 +82,50 @@ class FeatureEngineeringPipeline():
 
     def read_data(self) -> pd.DataFrame:
         '''
-        Read raw data from csv file. 
-        The files names must be 'Train_BigMart.csv' and 'Test_BigMart.csv' for train and test data.
+        Read raw data from csv file.
 
         -return pandas_df: The desired DataLake table as a DataFrame.
         -rtype: pd.DataFrame.
         '''
+        variables = ['Item_Identifier', 'Item_Weight', 'Item_Fat_Content', 'Item_Visibility',
+                     'Item_Type', 'Item_MRP', 'Outlet_Identifier',
+                     'Outlet_Establishment_Year', 'Outlet_Size', 'Outlet_Location_Type',
+                     'Outlet_Type']
+
         # For predict data:
         if self.predict_data:
             example = pd.read_json(self.input_path, typ='series')
             example = pd.DataFrame(
                 data=[example.values], columns=example.index)
-
-            return example
+            pandas_df = example.copy()
 
         # For train data:
-        for filename in os.listdir(self.input_path):
-            if filename == 'Train_BigMart.csv':
-                data_train = pd.read_csv(self.input_path + '/' + filename)
-                data_train['Set'] = 'train'
-            elif filename == 'Test_BigMart.csv':
-                data_test = pd.read_csv(self.input_path + '/' + filename)
-                data_test['Set'] = 'test'
-
-        data = pd.concat([data_train, data_test],
-                         ignore_index=True, sort=False)
-
-        variables = ['Item_Identifier', 'Item_Weight', 'Item_Fat_Content', 'Item_Visibility',
-                     'Item_Type', 'Item_MRP', 'Outlet_Identifier', 'Outlet_Establishment_Year',
-                     'Outlet_Size', 'Outlet_Location_Type', 'Outlet_Type', 'Item_Outlet_Sales', 'Set']
-
-        missing_col = [var for var in variables if var not in data.columns]
-
-        # Check if there is any missing expected column for the data transformation function.
-        if missing_col:
-            print(f'Error: Colums missing in the dataset:  {missing_col}')
         else:
-            pandas_df = data[variables]
+            for filename in os.listdir(self.input_path):
+                _, file_format = os.path.splitext(filename)
+                if file_format == '.csv':
+                    data = pd.read_csv(self.input_path + '/' + filename)
+                    if 'Item_Outlet_Sales' in data.columns:
+                        data_train = data.copy()
+                        data_train['Set'] = 'train'
+                    elif list(data.columns) == variables:
+                        data_test = data.copy()
+                        data_test['Set'] = 'test'
 
-            return pandas_df
+            data = pd.concat([data_train, data_test],
+                             ignore_index=True, sort=False)
 
-        return None
+            variables.extend(['Item_Outlet_Sales', 'Set'])
+
+            missing_col = [var for var in variables if var not in data.columns]
+
+            # Check if there is any missing expected column for the data transformation function.
+            if missing_col:
+                print(f'Error: Colums missing in the dataset:  {missing_col}')
+            else:
+                pandas_df = data[variables]
+
+        return pandas_df
 
     def data_transformation(self, data: pd.DataFrame) -> pd.DataFrame:
         '''
@@ -207,7 +220,7 @@ class FeatureEngineeringPipeline():
             df_train_final.to_csv(self.output_path + "/outdata_train.csv")
             df_test_final.to_csv(self.output_path + "/outdata_Test.csv")
 
-            print('¡¡DATA SUCCESSFULLY TRANSFORMED!!')
+            logging.info('DATA SUCCESSFULLY TRANSFORMED!!')
 
     def run(self):
         ''' 
