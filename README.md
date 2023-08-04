@@ -20,6 +20,7 @@ DATE: 01-Ago-2023
 
       Output files: "example_df.csv" and "predicted_data.csv"
 
-
-
 -The output files and results will be saved in the folder "results"
+
+-------------------------------------------------------------
+Hyperparameter optimization in Notebook: HPs_optimization.ipynb
