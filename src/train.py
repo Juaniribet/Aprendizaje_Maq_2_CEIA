@@ -13,7 +13,7 @@ Output model trained: sklearn Linear Regression (file: model_trained.pkl).
 
 
 AUTHOR: Juan Ignacio Ribet.
-DATE: 31-Jul-2023.
+DATE: 07-Ago-2023.
 '''
 
 # Imports
@@ -44,10 +44,10 @@ class ModelTrainingPipeline():
 
     def read_data(self) -> pd.DataFrame:
         '''
-        Read input file 'outdata_train.csv'.
+        Read and load data from a CSV file located at the specified input path.
 
-        :return pandas_df: The desired DataLake table as a DataFrame.
-        :rtype: pd.DataFrame.
+        :return: A pandas DataFrame containing the loaded data.
+        :rtype: pd.DataFrame
         '''
         data = pd.read_csv(self.input_path, index_col=0)
 
@@ -55,9 +55,16 @@ class ModelTrainingPipeline():
 
     def model_training(self, dataframe: pd.DataFrame) -> pd.DataFrame:
         '''
-        Split data (70% train, 30% validation) and train the Linear Regression model.
+        Train a linear regression model using the provided DataFrame.
 
-        Returned metrics:   -TRAIN DATA: RMSE & R2.
+        :param dataframe: A pandas DataFrame containing the training data.
+        :type dataframe: pd.DataFrame
+        :return: A trained linear regression model.
+        :rtype: pd.DataFrame
+
+        :Split data (70% train, 30% validation) and train the Linear Regression model.
+
+        :Returned metrics:   -TRAIN DATA: RMSE & R2.
                             -VALIDATION DATA: RMSE & R2.
                             -Intersection.
                             -Estimates Coefficient.
@@ -103,14 +110,24 @@ class ModelTrainingPipeline():
 
     def model_dump(self, model_trained) -> None:
         '''
-        Save trained model as 'model_trained.pkl' file.
+        Serialize and save a trained model to a binary file at the specified path.
+
+        :param model_trained: A trained machine learning model to be serialized and saved.
+        :type model_trained: Any
+
+        :Save trained model as 'model_trained.pkl' file.
         '''
         with open(self.model_path, 'wb') as file:
             pickle.dump(model_trained, file)
 
     def run(self):
         '''
-        Run pipeline Training Pipeline.
+        Run the complete workflow for reading data, training a model, and saving the trained model.
+
+        This function orchestrates the following steps:
+        1. Read data from a CSV file.
+        2. Train a machine learning model using the loaded data.
+        3. Serialize and save the trained model to a file.
         '''
         dataframe = self.read_data()
         model_trained = self.model_training(dataframe)

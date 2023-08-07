@@ -9,7 +9,7 @@ It will return a csv file with the 'Item_Identifier', 'Outlet_Identifier' and
 the Item_Outlet_Sales prediction.
 
 AUTHOR: Juan Ignacio Ribet
-DATE: 01-Ago-2023
+DATE: 07-Ago-2023
 """
 
 # Imports
@@ -27,9 +27,9 @@ logging.basicConfig(
     datefmt='%Y-%m-%d %H:%M:%S')
 
 class MakePredictionPipeline():
-    '''
+    """
     Make prediction with the trained model class.
-    '''
+    """
 
     def __init__(self, input_path, output_path, model_path: str = None):
         self.input_path = input_path
@@ -41,7 +41,10 @@ class MakePredictionPipeline():
 
     def load_data(self) -> pd.DataFrame:
         """
-        Load the data for predictions and save the 'Item_Identifier' and 'Outlet_Identifier.
+        Load the data for predictions and save the 'Item_Identifier' and 'Outlet_Identifier'.
+
+        :return: A pandas DataFrame containing the loaded data for predictions.
+        :rtype: pd.DataFrame
         """
         data = pd.read_csv(self.input_path, index_col=0)
         # Save 'Item_Identifier' and 'Outlet_Identifier' for the return data.
@@ -55,14 +58,21 @@ class MakePredictionPipeline():
 
     def load_model(self) -> None:
         """
-        Load the trained model.
+        Load a trained machine learning model from the specified file path and assign it to
+        the instance variable 'model'.
         """
         with open(self.model_path, 'rb') as file:
             self.model = pickle.load(file)
 
     def make_predictions(self, data: pd.DataFrame) -> pd.DataFrame:
         """
-        Make the sale prediction with the load data and the load model.
+        Make predictions using the trained model on the provided input data.
+
+        :param data: A pandas DataFrame containing the input data for making predictions.
+        :type data: pd.DataFrame
+        :return: A pandas DataFrame containing the predictions along with item and outlet 
+        identifiers.
+        :rtype: pd.DataFrame
         """
         # Make the prediction.
         pred = self.model.predict(data)
@@ -80,14 +90,24 @@ class MakePredictionPipeline():
 
     def write_predictions(self, predicted_data: pd.DataFrame) -> None:
         """
-        Save the the predction and the identifiers in an scv file.
+        Write the predicted data to a CSV file at the specified output path.
+
+        :param predicted_data: A pandas DataFrame containing the predicted data.
+        :type predicted_data: pd.DataFrame
         """
         predicted_data.to_csv(self.output_path)
 
     def run(self):
-        '''
-        Run pipeline Predict Pipeline.
-        '''
+        """
+        Run the complete workflow for loading data, loading a trained model, making predictions,
+        and writing the results.
+
+        This function orchestrates the following steps:
+        1. Load input data for predictions.
+        2. Load a trained model.
+        3. Generate predictions using the loaded model.
+        4. Write the prediction results to an output file.
+        """
         data = self.load_data()
         self.load_model()
         df_preds = self.make_predictions(data)

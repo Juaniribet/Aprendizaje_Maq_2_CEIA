@@ -37,7 +37,7 @@ Output data variables:
 - Outlet_Type_Supermarket Type3 : (0, 1)
 
 AUTHOR: Juan Ignacio Ribet
-DATE: 05-Ago-2023
+DATE: 07-Ago-2023
 '''
 
 # Imports
@@ -57,9 +57,20 @@ logging.basicConfig(
 
 def replace_data(dataframe: pd.DataFrame, column: str, dic_data_repalce: dict):
     '''
-    Funtion to code ordinal variables of the 'dataframe'.
-    column : column name to modify to code ordinal values
-    dic_data_repalce: dtype: dict 
+    Replace values in a DataFrame column with specified dictionary values.
+
+    :param dataframe: The DataFrame containing the column to be replaced.
+    :type dataframe: pandas.DataFrame
+    :param column: The name of the column to be replaced.
+    :type column: str
+    :param dic_data_replace: A dictionary mapping values to their replacements.
+    :type dic_data_replace: dict
+
+    This function replaces values in the specified column of the provided DataFrame
+    with corresponding values from the provided dictionary.
+
+    .. warning::
+        This function modifies the input DataFrame in-place.
     '''
     dataframe[column] = dataframe[column].replace(dic_data_repalce)
 
@@ -77,10 +88,19 @@ class FeatureEngineeringPipeline():
 
     def read_data(self) -> pd.DataFrame:
         '''
-        Read raw data from csv file.
+        Read data from csv files and return a pandas dataframe.
 
-        -return pandas_df: The desired DataLake table as a DataFrame.
-        -rtype: pd.DataFrame.
+        :param self: The instance of the class.
+        :return: DataFrame containing the raw data from the csv files.
+        :rtype: pandas.DataFrame
+
+        This method reads raw data from the csv files located at the path specified by
+        the ``input_path`` attribute of the class instance. It then converts the data into
+        a DataFrame and returns it.
+
+        .. note::
+            The ``input_path`` attribute of the class instance must be set before calling this 
+            method.
         '''
         variables = ['Item_Identifier', 'Item_Weight', 'Item_Fat_Content', 'Item_Visibility',
                      'Item_Type', 'Item_MRP', 'Outlet_Identifier',
@@ -107,7 +127,8 @@ class FeatureEngineeringPipeline():
 
         # Check if there is any missing expected column for the data transformation function.
         if missing_col:
-            print(f'Error: Colums missing in the dataset:  {missing_col}')
+            error_messege = (f'Error: Colums missing in the dataset:  {missing_col}')
+            logging.info(error_messege)
         else:
             pandas_df = data[variables]
 
@@ -115,7 +136,28 @@ class FeatureEngineeringPipeline():
 
     def data_transformation(self, data: pd.DataFrame) -> pd.DataFrame:
         '''
-        Data transformation.
+        Perform data transformation on input data.
+
+        :param self: The instance of the class.
+        :param data: The input DataFrame containing raw data.
+        :type data: pandas.DataFrame
+
+        :return: Transformed DataFrame representing the desired DataLake table.
+        :rtype: pandas.DataFrame
+
+        This method performs several transformations on the input data:
+
+        1. Calculates the age of the establishment based on the year 2019.
+        2. Fill null values in productos 'Item_Weight' using the mode of the 'Item_Weight'.
+        3. Encodes 'Outlet_Size' using mapping ({'High': 2, 'Medium': 1, 'Small': 0}).
+        4. Encodes 'Outlet_Location_Type' using mapping ({'Tier 1': 2, 'Tier 2': 1, 'Tier 3': 0}).
+        5. Codes 'Item_MRP' based on labels=[1, 2, 3, 4]
+        6. Drops columns 'Item_Type' and 'Item_Fat_Content'.
+        7. Encodes 'Outlet_Type' using pd.get_dummies function.
+        8. Returns the transformed DataFrame.
+
+        .. note::
+            The function makes use of the `replace_data` function.
         '''
         # Determine the age of the Establisment by the year 2019.
         data['Outlet_Establishment_Year'] = 2020 - \
@@ -160,8 +202,24 @@ class FeatureEngineeringPipeline():
 
     def write_prepared_data(self, transformed_dataframe: pd.DataFrame) -> None:
         '''
-        Files saved as csv format at the outputh_path location.
-        -transformed_dataframe: pd.DataFrame.
+        Write prepared data to a CSV file.
+
+        :param self: The instance of the class.
+        :param transformed_dataframe: The DataFrame containing prepared data.
+        :type transformed_dataframe: pandas.DataFrame
+
+        This method writes the provided DataFrame containing prepared data to a CSV file.
+        The file will be saved at the location specified by the ``output_path`` attribute
+        of the class instance.
+
+        :param transformed_dataframe: The DataFrame to be written.
+        :type transformed_dataframe: pandas.DataFrame
+
+        .. warning::
+            This function will overwrite the CSV file if it already exists.
+
+        .. note::
+            The ``output_path`` attribute of the class instance must be set before calling this method.
         '''
 
         # Splitting the dataset in train and test.
@@ -183,7 +241,16 @@ class FeatureEngineeringPipeline():
 
     def run(self):
         ''' 
-        Run Feature Engineering pipeline.
+        Execute the Feature Engineering pipeline.
+
+        :param self: The instance of the class.
+        :return: None
+
+        This method orchestrates the execution of the Feature Engineering pipeline:
+
+        1. Reads raw data using the :func:`read_data` method.
+        2. Applies data transformation using the :func:`data_transformation` method.
+        3. Writes the prepared data using the :func:`write_prepared_data` method.
         '''
         data_frame = self.read_data()
         df_transformed = self.data_transformation(data_frame)

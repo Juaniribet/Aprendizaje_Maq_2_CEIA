@@ -1,11 +1,11 @@
-2023-08-05 12:31:21 - root - INFO - TRAIN DATA SUCCESSFULLY TRANSFORMED!!
-2023-08-05 12:31:30 - root - INFO - TRAIN SCRIPT RUN SUCCESSFULLY!!
-2023-08-05 12:31:30 - root - INFO - Model Metrics:
-2023-08-05 12:31:30 - root - INFO - TRAIN: RMSE: 1169.35 - R2: 0.5284
-2023-08-05 12:31:30 - root - INFO - VALIDATION: RMSE: 1146.66 - R2: 0.5526
-2023-08-05 12:31:30 - root - INFO - Model Coefficients:
-2023-08-05 12:31:30 - root - INFO - Intersection: 253.70
-2023-08-05 12:31:30 - root - INFO -                         features  Estimates Coefficient
+2023-08-07 10:07:17 - root - INFO - TRAIN DATA SUCCESSFULLY TRANSFORMED!!
+2023-08-07 10:07:20 - root - INFO - TRAIN SCRIPT RUN SUCCESSFULLY!!
+2023-08-07 10:07:20 - root - INFO - Model Metrics:
+2023-08-07 10:07:20 - root - INFO - TRAIN: RMSE: 1169.35 - R2: 0.5284
+2023-08-07 10:07:20 - root - INFO - VALIDATION: RMSE: 1146.66 - R2: 0.5526
+2023-08-07 10:07:20 - root - INFO - Model Coefficients:
+2023-08-07 10:07:20 - root - INFO - Intersection: 253.70
+2023-08-07 10:07:20 - root - INFO -                         features  Estimates Coefficient
 0                    Item_Weight              -2.332949
 1                Item_Visibility            -311.774516
 2                       Item_MRP             825.276595
@@ -16,5 +16,5 @@
 7  Outlet_Type_Supermarket Type1             191.570173
 8  Outlet_Type_Supermarket Type2            -242.596116
 9  Outlet_Type_Supermarket Type3            1715.717274
-2023-08-05 12:31:59 - root - INFO - INFERENCE DATA SUCCESSFULLY TRANSFORMED!!
-2023-08-05 12:32:05 - root - INFO - ('The predicted sales of the item FDW58', 'in the outlet OUT049 are: 1979')
+2023-08-07 10:07:37 - root - INFO - INFERENCE DATA SUCCESSFULLY TRANSFORMED!!
+2023-08-07 10:07:39 - root - INFO - ('The predicted sales of the item FDW58', 'in the outlet OUT049 are: 1979')
